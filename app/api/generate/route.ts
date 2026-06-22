@@ -1,12 +1,19 @@
 import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY!,
+  apiKey: process.env.GEMINI_API_KEY,
 });
 
 export async function POST(req: Request) {
   try {
     const { resumeText } = await req.json();
+
+    if (!process.env.GEMINI_API_KEY) {
+      return Response.json(
+        { error: "Missing GEMINI_API_KEY in Vercel" },
+        { status: 500 }
+      );
+    }
 
     if (!resumeText) {
       return Response.json(
@@ -16,14 +23,13 @@ export async function POST(req: Request) {
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-     contents: `
+      model: "gemini-1.5-flash",
+      contents: `
 You are FolioForge.
 
 Analyze this resume and create portfolio content.
 
 CRITICAL RULES:
-
 - Never invent projects.
 - Never invent work experience.
 - Never invent certifications.
@@ -53,7 +59,7 @@ Return ONLY valid JSON in this exact shape:
 
 Resume:
 ${resumeText}
-`
+`,
     });
 
     const text = response.text || "";
@@ -66,11 +72,15 @@ ${resumeText}
     const portfolio = JSON.parse(cleaned);
 
     return Response.json({ portfolio });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini generate error:", error);
 
     return Response.json(
-      { error: "Failed to generate portfolio" },
+      {
+        error:
+          error?.message ||
+          "Failed to generate portfolio. Check Gemini API key/model.",
+      },
       { status: 500 }
     );
   }
