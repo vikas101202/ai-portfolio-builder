@@ -2,54 +2,42 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  Upload,
-  FileText,
-  Sparkles,
-  Loader2,
-} from "lucide-react";
+import { Upload, FileText, Sparkles, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 export default function GeneratePage() {
   const router = useRouter();
+
   const [file, setFile] = useState<File | null>(null);
+  const [resumeText, setResumeText] = useState("");
+  const [isExtracting, setIsExtracting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingText, setLoadingText] = useState("");
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
+  const extractPdfText = async (file: File) => {
+    const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-    if (selectedFile) {
-      setFile(selectedFile);
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/legacy/build/pdf.worker.min.mjs`;
+
+    const arrayBuffer = await file.arrayBuffer();
+
+    const pdf = await pdfjsLib.getDocument({
+      data: arrayBuffer,
+    }).promise;
+
+    let text = "";
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      const page = await pdf.getPage(pageNumber);
+      const content = await page.getTextContent();
+
+      const pageText = content.items.map((item: any) => item.str).join(" ");
+
+      text += pageText + "\n";
     }
+
+    return text;
   };
-const extractPdfText = async (file: File) => {
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
-
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/legacy/build/pdf.worker.min.mjs`;
-
-  const arrayBuffer = await file.arrayBuffer();
-
-  const pdf = await pdfjsLib.getDocument({
-    data: arrayBuffer,
-  }).promise;
-
-  let text = "";
-
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-
-    const pageText = content.items
-      .map((item: any) => item.str)
-      .join(" ");
-
-    text += pageText + "\n";
-  }
-
-  return text;
-};
 
   const extractResumeText = async (file: File) => {
     if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
@@ -59,35 +47,44 @@ const extractPdfText = async (file: File) => {
     return await file.text();
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+
+    if (!selectedFile) return;
+
+    try {
+      setFile(selectedFile);
+      setResumeText("");
+      setIsExtracting(true);
+
+      const text = await extractResumeText(selectedFile);
+
+      if (!text.trim()) {
+        alert("Could not read text from this file. Try another resume.");
+        setFile(null);
+        return;
+      }
+
+      setResumeText(text);
+    } catch (error) {
+      console.error(error);
+      alert("Could not read this resume. Try another file.");
+      setFile(null);
+      setResumeText("");
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
   const generatePortfolio = async () => {
-    if (!file) return;
+    if (!file || !resumeText.trim()) {
+      alert("Resume is still loading. Please wait a second.");
+      return;
+    }
 
     try {
       setIsGenerating(true);
-      setLoadingText("Reading Resume...");
-
-      setTimeout(() => {
-        setLoadingText("Analyzing Experience...");
-      }, 1200);
-
-      setTimeout(() => {
-        setLoadingText("Identifying Skills...");
-      }, 2400);
-
-      setTimeout(() => {
-        setLoadingText("Building Portfolio...");
-      }, 3600);
-
-      setTimeout(() => {
-        setLoadingText("Almost Ready...");
-      }, 4800);
-
-      const resumeText = await extractResumeText(file);
-
-      if (!resumeText.trim()) {
-        alert("Could not read text from this file. Try another resume.");
-        return;
-      }
+      setLoadingText("Analyzing Experience...");
 
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -199,21 +196,27 @@ const extractPdfText = async (file: File) => {
                     </p>
 
                     <p className="text-xs text-white/45">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                      {isExtracting
+                        ? "Reading resume..."
+                        : `${(file.size / 1024 / 1024).toFixed(2)} MB`}
                     </p>
                   </div>
                 </div>
 
                 <button
                   onClick={generatePortfolio}
-                  disabled={isGenerating}
+                  disabled={isExtracting || isGenerating || !resumeText}
                   className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium text-black transition hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {isGenerating && (
+                  {(isExtracting || isGenerating) && (
                     <Loader2 size={16} className="animate-spin" />
                   )}
 
-                  {isGenerating ? loadingText : "Continue"}
+                  {isExtracting
+                    ? "Reading Resume..."
+                    : isGenerating
+                    ? loadingText || "Generating..."
+                    : "Continue"}
                 </button>
               </div>
             )}
