@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #050607;
+  color: #f4eadc;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+}
+
+.heading-font {
+  font-family: var(--font-syne), Arial, Helvetica, sans-serif;
+}
