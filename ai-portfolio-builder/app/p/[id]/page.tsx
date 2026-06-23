@@ -1,138 +1,37 @@
-"use client";
+import { ObjectId } from "mongodb";
+import { notFound } from "next/navigation";
+import { Globe2, Code2, Briefcase, Mail } from "lucide-react";
+import clientPromise from "@/lib/mongodb";
 
-import { ArrowLeft, Globe2, Code2, Briefcase, Mail } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+export default async function PublicPortfolioPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
-export default function PreviewPage() {
-  const router = useRouter();
-  const [portfolio, setPortfolio] = useState<any>(null);
-  const [publishing, setPublishing] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("folioforge-portfolio");
-
-    if (stored) {
-      setPortfolio(JSON.parse(stored));
-      return;
-    }
-
-    if (window.name) {
-      try {
-        const parsed = JSON.parse(window.name);
-
-        if (parsed.folioforgePortfolio) {
-          setPortfolio(parsed.folioforgePortfolio);
-        }
-      } catch {
-        setPortfolio(null);
-      }
-    }
-  }, []);
-
-  const regeneratePortfolio = () => {
-    router.push("/generate");
-  };
-
-  const downloadJSON = () => {
-    const blob = new Blob([JSON.stringify(portfolio, null, 2)], {
-      type: "application/json",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "folioforge-portfolio.json";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const publishPortfolio = async () => {
-    try {
-      setPublishing(true);
-
-      const res = await fetch("/api/publish", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(portfolio),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        alert(data.error || "Publishing failed.");
-        return;
-      }
-
-      const fullUrl = `${window.location.origin}${data.url}`;
-      await navigator.clipboard.writeText(fullUrl);
-
-      alert("Portfolio published! Link copied to clipboard.");
-      router.push(data.url);
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong while publishing.");
-    } finally {
-      setPublishing(false);
-    }
-  };
-
-  if (!portfolio) {
-    return (
-      <main className="min-h-screen bg-[#050505] flex flex-col items-center justify-center gap-6 text-white">
-        <p>No generated portfolio found.</p>
-
-        <button
-          onClick={() => router.push("/generate")}
-          className="rounded-full bg-white px-6 py-3 font-medium text-black"
-        >
-          Upload Resume Again
-        </button>
-      </main>
-    );
+  if (!ObjectId.isValid(id)) {
+    notFound();
   }
+
+  const client = await clientPromise;
+  const db = client.db("folioforge");
+
+  const saved = await db.collection("portfolios").findOne({
+    _id: new ObjectId(id),
+  });
+
+  if (!saved?.portfolio) {
+    notFound();
+  }
+
+  const portfolio: any = saved.portfolio;
 
   return (
     <main className="min-h-screen bg-[#050505] px-6 py-10 text-[#f4eadc]">
       <section className="mx-auto max-w-6xl">
-        <div className="mb-14 flex flex-wrap items-center justify-between gap-4">
-          <button
-            onClick={() => router.push("/generate")}
-            className="inline-flex items-center gap-3 rounded-full border border-white/10 px-5 py-3 text-white/70 transition hover:bg-white/[0.05]"
-          >
-            <ArrowLeft size={18} />
-            Back
-          </button>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={regeneratePortfolio}
-              className="rounded-full border border-white/10 px-5 py-3 text-sm text-white/70 transition hover:bg-white/[0.05]"
-            >
-              Regenerate
-            </button>
-
-            <button
-              onClick={downloadJSON}
-              className="rounded-full bg-white px-5 py-3 text-sm font-medium text-black transition hover:scale-[1.03]"
-            >
-              Download JSON
-            </button>
-
-            <button
-              onClick={publishPortfolio}
-              disabled={publishing}
-              className="rounded-full border border-[#e5c185]/30 px-5 py-3 text-sm text-[#e5c185] transition hover:bg-[#e5c185]/10 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {publishing ? "Publishing..." : "Publish"}
-            </button>
-          </div>
-        </div>
-
         <p className="mb-6 text-sm tracking-[0.45em] text-[#e5c185]">
-          PORTFOLIO PREVIEW
+          PUBLISHED PORTFOLIO
         </p>
 
         <h1 className="max-w-5xl text-6xl font-black leading-[0.92] tracking-tight md:text-8xl">
@@ -151,6 +50,7 @@ export default function PreviewPage() {
           <div className="rounded-[2rem] border border-[#e5c185]/15 bg-white/[0.035] p-8">
             <Globe2 className="mb-8 text-[#e5c185]" />
             <h2 className="text-3xl font-black">About</h2>
+
             <p className="mt-5 leading-relaxed text-[#b8afa3]">
               {portfolio.about}
             </p>
@@ -207,10 +107,6 @@ export default function PreviewPage() {
               <h3 className="text-2xl font-bold text-[#f4eadc]">
                 No Projects Found
               </h3>
-
-              <p className="mx-auto mt-4 max-w-xl text-[#8a8379]">
-                This resume doesn&apos;t contain any project information.
-              </p>
             </div>
           )}
         </div>

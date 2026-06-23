@@ -31,7 +31,9 @@ export default function GeneratePage() {
       const page = await pdf.getPage(pageNumber);
       const content = await page.getTextContent();
 
-      const pageText = content.items.map((item: any) => item.str).join(" ");
+      const pageText = Array.from(content.items)
+  .map((item: any) => item.str || "")
+  .join(" ");
 
       text += pageText + "\n";
     }
@@ -101,12 +103,18 @@ export default function GeneratePage() {
         return;
       }
 
-      localStorage.setItem(
-        "folioforge-portfolio",
-        JSON.stringify(data.portfolio)
-      );
+try {
+  localStorage.setItem(
+    "folioforge-portfolio",
+    JSON.stringify(data.portfolio)
+  );
+} catch {
+  window.name = JSON.stringify({
+    folioforgePortfolio: data.portfolio,
+  });
+}
 
-      router.push("/preview");
+router.push("/preview");
     } catch (error) {
       console.error(error);
       alert("Something went wrong while generating the portfolio.");
