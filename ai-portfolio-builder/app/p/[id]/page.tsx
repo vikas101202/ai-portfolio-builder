@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { notFound } from "next/navigation";
 import { Globe2, Code2, Briefcase, Mail } from "lucide-react";
-import clientPromise from "@/lib/mongodb";
+import clientPromise from "../../../lib/mongodb";
 
 export default async function PublicPortfolioPage({
   params,
