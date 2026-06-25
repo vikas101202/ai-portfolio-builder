@@ -31,8 +31,6 @@ export default function PreviewPage() {
   }, []);
 
   const regeneratePortfolio = () => {
-    localStorage.removeItem("folioforge-portfolio");
-    window.name = "";
     router.push("/generate");
   };
 
@@ -69,16 +67,10 @@ export default function PreviewPage() {
       }
 
       const fullUrl = `${window.location.origin}${data.url}`;
-
       await navigator.clipboard.writeText(fullUrl);
 
-      const openPortfolio = confirm(
-        "Portfolio published successfully!\n\nPress OK to view your portfolio."
-      );
-
-      if (openPortfolio) {
-        router.push(data.url);
-      }
+      alert("Portfolio published! Link copied to clipboard.");
+      router.push(data.url);
     } catch (error) {
       console.error(error);
       alert("Something went wrong while publishing.");
@@ -213,12 +205,11 @@ export default function PreviewPage() {
           ) : (
             <div className="mt-8 rounded-3xl border border-dashed border-white/10 bg-black/20 p-12 text-center">
               <h3 className="text-2xl font-bold text-[#f4eadc]">
-                Projects Section Ready
+                No Projects Found
               </h3>
 
               <p className="mx-auto mt-4 max-w-xl text-[#8a8379]">
-                No projects were detected in this resume. Add projects to
-                showcase your work and achievements.
+                This resume doesn&apos;t contain any project information.
               </p>
             </div>
           )}
@@ -257,29 +248,11 @@ export default function PreviewPage() {
           <h2 className="text-3xl font-black">Contact</h2>
 
           <div className="mt-5 space-y-2 text-[#b8afa3]">
-            {portfolio.contact?.email && <p>{portfolio.contact.email}</p>}
-            {portfolio.contact?.phone && <p>{portfolio.contact.phone}</p>}
-            {portfolio.contact?.location && <p>{portfolio.contact.location}</p>}
-
-            {portfolio.contact?.linkedin && (
-              <a
-                href={portfolio.contact.linkedin}
-                target="_blank"
-                className="block transition hover:text-[#e5c185]"
-              >
-                {portfolio.contact.linkedin}
-              </a>
-            )}
-
-            {portfolio.contact?.github && (
-              <a
-                href={portfolio.contact.github}
-                target="_blank"
-                className="block transition hover:text-[#e5c185]"
-              >
-                {portfolio.contact.github}
-              </a>
-            )}
+            <p>{portfolio.contact?.email}</p>
+            <p>{portfolio.contact?.phone}</p>
+            <p>{portfolio.contact?.location}</p>
+            <p>{portfolio.contact?.linkedin}</p>
+            <p>{portfolio.contact?.github}</p>
           </div>
         </div>
       </section>
