@@ -110,7 +110,7 @@ export default function GeneratePage() {
         folioforgePortfolio: data.portfolio,
       });
 
-      router.push("/preview");
+      router.push("/templates");
     } catch (error) {
       console.error(error);
       alert("Something went wrong while generating the portfolio.");
