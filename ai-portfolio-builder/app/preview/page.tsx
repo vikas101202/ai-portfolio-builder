@@ -13,8 +13,12 @@ export default function PreviewPage() {
     const stored = localStorage.getItem("folioforge-portfolio");
 
     if (stored) {
-      setPortfolio(JSON.parse(stored));
-      return;
+      try {
+        setPortfolio(JSON.parse(stored));
+        return;
+      } catch {
+        localStorage.removeItem("folioforge-portfolio");
+      }
     }
 
     if (window.name) {
@@ -30,7 +34,13 @@ export default function PreviewPage() {
     }
   }, []);
 
+  const goBackToGenerate = () => {
+    router.push("/generate");
+  };
+
   const regeneratePortfolio = () => {
+    localStorage.removeItem("folioforge-portfolio");
+    window.name = "";
     router.push("/generate");
   };
 
@@ -61,15 +71,20 @@ export default function PreviewPage() {
 
       const data = await res.json();
 
-      if (!data.success) {
+      if (!data.success || !data.url) {
         alert(data.error || "Publishing failed.");
         return;
       }
 
       const fullUrl = `${window.location.origin}${data.url}`;
-      await navigator.clipboard.writeText(fullUrl);
 
-      alert("Portfolio published! Link copied to clipboard.");
+      try {
+        await navigator.clipboard.writeText(fullUrl);
+        alert("Portfolio published! Link copied to clipboard.");
+      } catch {
+        alert(`Portfolio published! Copy this link: ${fullUrl}`);
+      }
+
       router.push(data.url);
     } catch (error) {
       console.error(error);
@@ -85,7 +100,7 @@ export default function PreviewPage() {
         <p>No generated portfolio found.</p>
 
         <button
-          onClick={() => router.push("/generate")}
+          onClick={regeneratePortfolio}
           className="rounded-full bg-white px-6 py-3 font-medium text-black"
         >
           Upload Resume Again
@@ -99,7 +114,7 @@ export default function PreviewPage() {
       <section className="mx-auto max-w-6xl">
         <div className="mb-14 flex flex-wrap items-center justify-between gap-4">
           <button
-            onClick={() => router.push("/generate")}
+            onClick={goBackToGenerate}
             className="inline-flex items-center gap-3 rounded-full border border-white/10 px-5 py-3 text-white/70 transition hover:bg-white/[0.05]"
           >
             <ArrowLeft size={18} />
@@ -151,8 +166,9 @@ export default function PreviewPage() {
           <div className="rounded-[2rem] border border-[#e5c185]/15 bg-white/[0.035] p-8">
             <Globe2 className="mb-8 text-[#e5c185]" />
             <h2 className="text-3xl font-black">About</h2>
+
             <p className="mt-5 leading-relaxed text-[#b8afa3]">
-              {portfolio.about}
+              {portfolio.about || "No about section was generated."}
             </p>
           </div>
 
@@ -160,16 +176,22 @@ export default function PreviewPage() {
             <Code2 className="mb-8 text-[#e5c185]" />
             <h2 className="text-3xl font-black">Skills</h2>
 
-            <div className="mt-5 flex flex-wrap gap-2">
-              {portfolio.skills?.map((skill: string, index: number) => (
-                <span
-                  key={index}
-                  className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-sm text-[#d8cabb]"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
+            {portfolio.skills?.length > 0 ? (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {portfolio.skills.map((skill: string, index: number) => (
+                  <span
+                    key={index}
+                    className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-sm text-[#d8cabb]"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-5 text-[#8a8379]">
+                No skills were detected in this resume.
+              </p>
+            )}
           </div>
         </div>
 
@@ -205,11 +227,12 @@ export default function PreviewPage() {
           ) : (
             <div className="mt-8 rounded-3xl border border-dashed border-white/10 bg-black/20 p-12 text-center">
               <h3 className="text-2xl font-bold text-[#f4eadc]">
-                No Projects Found
+                Projects Section Ready
               </h3>
 
               <p className="mx-auto mt-4 max-w-xl text-[#8a8379]">
-                This resume doesn&apos;t contain any project information.
+                No projects were detected in this resume. Add projects to
+                showcase your work and achievements.
               </p>
             </div>
           )}
@@ -248,11 +271,31 @@ export default function PreviewPage() {
           <h2 className="text-3xl font-black">Contact</h2>
 
           <div className="mt-5 space-y-2 text-[#b8afa3]">
-            <p>{portfolio.contact?.email}</p>
-            <p>{portfolio.contact?.phone}</p>
-            <p>{portfolio.contact?.location}</p>
-            <p>{portfolio.contact?.linkedin}</p>
-            <p>{portfolio.contact?.github}</p>
+            {portfolio.contact?.email && <p>{portfolio.contact.email}</p>}
+            {portfolio.contact?.phone && <p>{portfolio.contact.phone}</p>}
+            {portfolio.contact?.location && <p>{portfolio.contact.location}</p>}
+
+            {portfolio.contact?.linkedin && (
+              <a
+                href={portfolio.contact.linkedin}
+                target="_blank"
+                rel="noreferrer"
+                className="block transition hover:text-[#e5c185]"
+              >
+                {portfolio.contact.linkedin}
+              </a>
+            )}
+
+            {portfolio.contact?.github && (
+              <a
+                href={portfolio.contact.github}
+                target="_blank"
+                rel="noreferrer"
+                className="block transition hover:text-[#e5c185]"
+              >
+                {portfolio.contact.github}
+              </a>
+            )}
           </div>
         </div>
       </section>

@@ -8,22 +8,28 @@ export async function POST(req: Request) {
   try {
     const { resumeText } = await req.json();
 
-    if (!resumeText) {
+    if (!resumeText || !resumeText.trim()) {
       return Response.json(
         { error: "Resume text is required" },
         { status: 400 }
       );
     }
 
+    if (!process.env.GEMINI_API_KEY) {
+      return Response.json(
+        { error: "Gemini API key is missing" },
+        { status: 500 }
+      );
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-     contents: `
+      contents: `
 You are FolioForge.
 
 Analyze this resume and create portfolio content.
 
 CRITICAL RULES:
-
 - Never invent projects.
 - Never invent work experience.
 - Never invent certifications.
@@ -53,17 +59,31 @@ Return ONLY valid JSON in this exact shape:
 
 Resume:
 ${resumeText}
-`
+`,
     });
 
-    const text = response.text || "";
+    const rawText = response.text || "";
 
-    const cleaned = text
+    if (!rawText.trim()) {
+      return Response.json(
+        { error: "Gemini returned an empty response" },
+        { status: 500 }
+      );
+    }
+
+    const cleaned = rawText
       .replace(/```json/g, "")
       .replace(/```/g, "")
       .trim();
 
     const portfolio = JSON.parse(cleaned);
+
+    if (!portfolio || typeof portfolio !== "object") {
+      return Response.json(
+        { error: "Gemini returned invalid portfolio data" },
+        { status: 500 }
+      );
+    }
 
     return Response.json({ portfolio });
   } catch (error) {

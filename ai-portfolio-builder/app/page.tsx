@@ -1,25 +1,20 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, FileText, Globe2, Upload, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, FileText, Globe2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export default function Home() {
   const router = useRouter();
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-
-  const openUpload = () => setShowUploadModal(true);
 
   const generatePortfolio = () => {
-    if (!file) return;
-    router.push("/preview");
+    localStorage.removeItem("folioforge-portfolio");
+    window.name = "";
+    router.push("/generate");
   };
 
   return (
     <main className="min-h-screen bg-[#050505] text-[#f4eadc] overflow-hidden">
-      {/* HERO */}
       <section className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
         <motion.p
           initial={{ opacity: 0, y: 14 }}
@@ -61,7 +56,7 @@ export default function Home() {
           className="mt-12 flex flex-wrap items-center justify-center gap-5"
         >
           <button
-            onClick={openUpload}
+            onClick={generatePortfolio}
             className="rounded-full bg-[#e5c185] px-10 py-5 text-lg font-bold text-black shadow-[0_0_60px_rgba(229,193,133,0.25)] transition hover:scale-[1.03]"
           >
             Generate Portfolio
@@ -73,7 +68,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      {/* FORGE SECTION */}
       <section className="px-6 py-32">
         <div className="mx-auto max-w-7xl">
           <p className="mb-8 text-sm tracking-[0.45em] text-[#e5c185]">
@@ -99,7 +93,9 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold">resume.pdf</h3>
-                  <p className="text-[#b8afa3]">Experience · Skills · Projects</p>
+                  <p className="text-[#b8afa3]">
+                    Experience · Skills · Projects
+                  </p>
                 </div>
               </div>
 
@@ -146,7 +142,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PORTFOLIO STYLES */}
       <section className="px-6 py-32">
         <div className="mx-auto max-w-7xl">
           <p className="mb-8 text-sm tracking-[0.45em] text-[#e5c185]">
@@ -188,7 +183,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FINAL CTA */}
       <section className="px-6 py-36 text-center">
         <Globe2 className="mx-auto mb-10 text-[#e5c185]" size={44} />
 
@@ -203,96 +197,13 @@ export default function Home() {
         </p>
 
         <button
-          onClick={openUpload}
+          onClick={generatePortfolio}
           className="mt-12 inline-flex items-center gap-4 rounded-full bg-[#e5c185] px-12 py-5 text-lg font-bold text-black shadow-[0_0_60px_rgba(229,193,133,0.25)] transition hover:scale-[1.03]"
         >
           Generate Portfolio
           <ArrowRight size={22} />
         </button>
       </section>
-
-      {/* UPLOAD MODAL */}
-      <AnimatePresence>
-        {showUploadModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-6 backdrop-blur-xl"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 30, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.96 }}
-              transition={{ duration: 0.25 }}
-              className="relative w-full max-w-xl rounded-[2rem] border border-white/10 bg-[#0a0a0a] p-8 shadow-2xl"
-            >
-              <button
-                onClick={() => setShowUploadModal(false)}
-                className="absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/60 transition hover:bg-white/10"
-              >
-                <X size={18} />
-              </button>
-
-              <div className="mb-8 text-center">
-                <p className="mb-4 text-sm tracking-[0.4em] text-[#e5c185]">
-                  BEGIN THE FORGE
-                </p>
-
-                <h2 className="text-4xl md:text-5xl font-black tracking-tight">
-                  Upload Your Resume
-                </h2>
-
-                <p className="mt-4 text-white/50">
-                  The story is already there. Let’s give it an address.
-                </p>
-              </div>
-
-              <label
-                htmlFor="resume-upload"
-                className="group flex cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-white/15 bg-white/[0.035] px-8 py-14 text-center transition hover:border-[#e5c185]/70 hover:bg-white/[0.05]"
-              >
-                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#e5c185] text-black transition group-hover:scale-105">
-                  <Upload size={28} />
-                </div>
-
-                <h3 className="text-2xl font-bold">
-                  {file ? file.name : "Choose Resume"}
-                </h3>
-
-                <p className="mt-3 text-sm text-white/40">
-                  PDF, DOCX, or TXT supported
-                </p>
-
-                <input
-                  id="resume-upload"
-                  type="file"
-                  accept=".pdf,.doc,.docx,.txt"
-                  className="hidden"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
-                />
-              </label>
-
-              <div className="mt-8 flex gap-4">
-                <button
-                  onClick={() => setShowUploadModal(false)}
-                  className="flex-1 rounded-full border border-white/10 py-4 font-medium text-white/70 transition hover:bg-white/[0.05]"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  disabled={!file}
-                  onClick={generatePortfolio}
-                  className="flex-1 rounded-full bg-[#e5c185] py-4 font-bold text-black transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Generate Portfolio →
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }

@@ -9,10 +9,19 @@ export default function GeneratePage() {
   const router = useRouter();
 
   const [file, setFile] = useState<File | null>(null);
-  const [resumeText, setResumeText] = useState("");
-  const [isExtracting, setIsExtracting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingText, setLoadingText] = useState("");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+
+    if (!selectedFile) return;
+
+    localStorage.removeItem("folioforge-portfolio");
+    window.name = "";
+
+    setFile(selectedFile);
+  };
 
   const extractPdfText = async (file: File) => {
     const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
@@ -32,8 +41,8 @@ export default function GeneratePage() {
       const content = await page.getTextContent();
 
       const pageText = Array.from(content.items)
-  .map((item: any) => item.str || "")
-  .join(" ");
+        .map((item: any) => item.str || "")
+        .join(" ");
 
       text += pageText + "\n";
     }
@@ -42,79 +51,66 @@ export default function GeneratePage() {
   };
 
   const extractResumeText = async (file: File) => {
-    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+    const isPdf =
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf");
+
+    if (isPdf) {
       return await extractPdfText(file);
     }
 
     return await file.text();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-
-    if (!selectedFile) return;
-
-    try {
-      setFile(selectedFile);
-      setResumeText("");
-      setIsExtracting(true);
-
-      const text = await extractResumeText(selectedFile);
-
-      if (!text.trim()) {
-        alert("Could not read text from this file. Try another resume.");
-        setFile(null);
-        return;
-      }
-
-      setResumeText(text);
-    } catch (error) {
-      console.error(error);
-      alert("Could not read this resume. Try another file.");
-      setFile(null);
-      setResumeText("");
-    } finally {
-      setIsExtracting(false);
-    }
-  };
-
   const generatePortfolio = async () => {
-    if (!file || !resumeText.trim()) {
-      alert("Resume is still loading. Please wait a second.");
+    if (!file) {
+      alert("Please upload a resume first.");
       return;
     }
 
     try {
       setIsGenerating(true);
-      setLoadingText("Analyzing Experience...");
+      setLoadingText("Reading Resume...");
+
+      setTimeout(() => setLoadingText("Analyzing Experience..."), 1200);
+      setTimeout(() => setLoadingText("Identifying Skills..."), 2400);
+      setTimeout(() => setLoadingText("Building Portfolio..."), 3600);
+      setTimeout(() => setLoadingText("Almost Ready..."), 4800);
+
+      const resumeText = await extractResumeText(file);
+      const finalResumeText = resumeText.trim();
+
+      if (!finalResumeText) {
+        alert("Could not read text from this file. Try another resume.");
+        return;
+      }
 
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ resumeText }),
+        body: JSON.stringify({ resumeText: finalResumeText }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        alert(data.error || "Failed to generate portfolio");
+      if (!response.ok || !data.portfolio) {
+        console.error("Invalid generate response:", data);
+        alert(data.error || "Failed to generate portfolio. Please try again.");
         return;
       }
 
-try {
-  localStorage.setItem(
-    "folioforge-portfolio",
-    JSON.stringify(data.portfolio)
-  );
-} catch {
-  window.name = JSON.stringify({
-    folioforgePortfolio: data.portfolio,
-  });
-}
+      localStorage.setItem(
+        "folioforge-portfolio",
+        JSON.stringify(data.portfolio)
+      );
 
-router.push("/preview");
+      window.name = JSON.stringify({
+        folioforgePortfolio: data.portfolio,
+      });
+
+      router.push("/preview");
     } catch (error) {
       console.error(error);
       alert("Something went wrong while generating the portfolio.");
@@ -204,27 +200,21 @@ router.push("/preview");
                     </p>
 
                     <p className="text-xs text-white/45">
-                      {isExtracting
-                        ? "Reading resume..."
-                        : `${(file.size / 1024 / 1024).toFixed(2)} MB`}
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
                 </div>
 
                 <button
                   onClick={generatePortfolio}
-                  disabled={isExtracting || isGenerating || !resumeText}
+                  disabled={isGenerating}
                   className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium text-black transition hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {(isExtracting || isGenerating) && (
+                  {isGenerating && (
                     <Loader2 size={16} className="animate-spin" />
                   )}
 
-                  {isExtracting
-                    ? "Reading Resume..."
-                    : isGenerating
-                    ? loadingText || "Generating..."
-                    : "Continue"}
+                  {isGenerating ? loadingText : "Continue"}
                 </button>
               </div>
             )}
