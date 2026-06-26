@@ -1,5 +1,7 @@
 "use client";
-
+import DeveloperTemplate from "../../components/templates/DeveloperTemplate";
+import CreativeTemplate from "../../components/templates/CreativeTemplate";
+import MinimalTemplate from "../../components/templates/MinimalTemplate";
 import { ArrowLeft, Globe2, Code2, Briefcase, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,8 +10,9 @@ export default function PreviewPage() {
   const router = useRouter();
   const [portfolio, setPortfolio] = useState<any>(null);
   const [publishing, setPublishing] = useState(false);
-
+const [selectedTemplate, setSelectedTemplate] = useState("developer");
   useEffect(() => {
+    setSelectedTemplate(localStorage.getItem("folioforge-template") || "developer");
     const stored = localStorage.getItem("folioforge-portfolio");
 
     if (stored) {
@@ -94,21 +97,45 @@ export default function PreviewPage() {
     }
   };
 
-  if (!portfolio) {
-    return (
-      <main className="min-h-screen bg-[#050505] flex flex-col items-center justify-center gap-6 text-white">
-        <p>No generated portfolio found.</p>
+ if (!portfolio) {
+  return (
+    <main className="min-h-screen bg-[#050505] flex flex-col items-center justify-center gap-6 text-white">
+      <p>No generated portfolio found.</p>
 
-        <button
-          onClick={regeneratePortfolio}
-          className="rounded-full bg-white px-6 py-3 font-medium text-black"
-        >
-          Upload Resume Again
-        </button>
-      </main>
-    );
-  }
+      <button
+        onClick={regeneratePortfolio}
+        className="rounded-full bg-white px-6 py-3 font-medium text-black"
+      >
+        Generate Again
+      </button>
+    </main>
+  );
+}
 
+if (selectedTemplate === "developer") {
+return (
+  <DeveloperTemplate
+    portfolio={portfolio}
+    publishing={publishing}
+    onRegenerate={regeneratePortfolio}
+    onDownload={downloadJSON}
+    onPublish={publishPortfolio}
+  />
+);
+}
+
+if (selectedTemplate === "minimal") {
+return (
+  <MinimalTemplate
+    portfolio={portfolio}
+  />
+);
+if (selectedTemplate === "creative") {
+return (
+  <CreativeTemplate
+    portfolio={portfolio}
+  />
+);
   return (
     <main className="min-h-screen bg-[#050505] px-6 py-10 text-[#f4eadc]">
       <section className="mx-auto max-w-6xl">
@@ -300,5 +327,4 @@ export default function PreviewPage() {
         </div>
       </section>
     </main>
-  );
-}
+  );}}}

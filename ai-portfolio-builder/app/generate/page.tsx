@@ -94,7 +94,8 @@ export default function GeneratePage() {
       });
 
       const data = await response.json();
-
+console.log("Generate status:", response.status);
+console.log("Generate data:", data);
       if (!response.ok || !data.portfolio) {
         console.error("Invalid generate response:", data);
         alert(data.error || "Failed to generate portfolio. Please try again.");
