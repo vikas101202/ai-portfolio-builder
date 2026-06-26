@@ -125,17 +125,36 @@ return (
 }
 
 if (selectedTemplate === "minimal") {
-return (
-  <MinimalTemplate
-    portfolio={portfolio}
-  />
-);
+  function downloadPortfolio(): void {
+    throw new Error("Function not implemented.");
+  }
+
+  return (
+    <MinimalTemplate
+      portfolio={portfolio}
+      publishing={publishing}
+      onRegenerate={goBackToGenerate}
+      onDownload={downloadPortfolio}
+      onPublish={publishPortfolio}
+    />
+  );
+}
+
 if (selectedTemplate === "creative") {
-return (
-  <CreativeTemplate
-    portfolio={portfolio}
-  />
-);
+  function downloadPortfolio(): void {
+    throw new Error("Function not implemented.");
+  }
+
+  return (
+    <CreativeTemplate
+      portfolio={portfolio}
+      publishing={publishing}
+      onRegenerate={goBackToGenerate}
+      onDownload={downloadPortfolio}
+      onPublish={publishPortfolio}
+    />
+  );
+}
   return (
     <main className="min-h-screen bg-[#050505] px-6 py-10 text-[#f4eadc]">
       <section className="mx-auto max-w-6xl">
@@ -327,4 +346,5 @@ return (
         </div>
       </section>
     </main>
-  );}}}
+  );
+}
