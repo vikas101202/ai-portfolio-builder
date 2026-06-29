@@ -19,16 +19,14 @@ export default function DeveloperTemplate({
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:72px_72px]" />
         <div className="absolute inset-0 bg-black/55" />
       </div>
-
-      <section className="mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-8">
+<section className="mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-5 py-24 sm:px-8">
         <div className="mb-12 inline-flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-5 py-2 backdrop-blur-xl">
           <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
           <span className="text-sm uppercase tracking-[0.25em] text-white/65">
             Available for Opportunities
           </span>
         </div>
-
-        <h1 className="max-w-5xl text-[13vw] font-black uppercase leading-[0.82] tracking-[-0.08em] md:text-[9rem]">
+<h1 className="max-w-5xl break-words text-[17vw] font-black uppercase leading-[0.86] tracking-[-0.08em] sm:text-[14vw] md:text-[9rem]">
           {portfolio?.name || "Developer"}
         </h1>
 
@@ -104,7 +102,7 @@ export default function DeveloperTemplate({
                 key={index}
                 className="group overflow-hidden rounded-[34px] border border-white/10 bg-[#090909] transition-all duration-500 hover:border-white/20 hover:shadow-[0_40px_120px_rgba(0,0,0,.55)]"
               >
-                <div className="grid lg:grid-cols-[1.05fr_0.95fr]">
+               <div className="grid lg:grid-cols-[1.05fr_0.95fr]">
                   <div className="relative min-h-[520px] overflow-hidden">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#001d39_0%,transparent_65%),radial-gradient(circle_at_bottom_right,#2a1308_0%,transparent_60%)]" />
                     <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.025)_1px,transparent_1px)] bg-[size:42px_42px]" />
@@ -130,7 +128,7 @@ export default function DeveloperTemplate({
                     </div>
                   </div>
 
-                  <div className="flex flex-col justify-between p-12">
+                  <div className="flex flex-col justify-between pp-6 sm:p-12">
                     <div>
                       <p className="text-xl leading-9 text-white/60">
                         {project?.description ||
@@ -177,7 +175,7 @@ export default function DeveloperTemplate({
               </article>
             ))
           ) : (
-            <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-12 text-white/40">
+            <div className="rounded-[32px] border border-white/10 bg-white/[0.04] p-6 sm:p-12 text-white/40">
               No projects available.
             </div>
           )}

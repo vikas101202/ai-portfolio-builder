@@ -2,16 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  Upload,
-  FileText,
-  Sparkles,
-  Loader2,
-} from "lucide-react";
+import { Upload, FileText, Sparkles, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 export default function GeneratePage() {
   const router = useRouter();
+
   const [file, setFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingText, setLoadingText] = useState("");
@@ -19,40 +15,47 @@ export default function GeneratePage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
 
-    if (selectedFile) {
-      setFile(selectedFile);
-    }
+    if (!selectedFile) return;
+
+    localStorage.removeItem("folioforge-portfolio");
+    window.name = "";
+
+    setFile(selectedFile);
   };
-const extractPdfText = async (file: File) => {
-  const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/legacy/build/pdf.worker.min.mjs`;
+  const extractPdfText = async (file: File) => {
+    const pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
-  const arrayBuffer = await file.arrayBuffer();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/legacy/build/pdf.worker.min.mjs`;
 
-  const pdf = await pdfjsLib.getDocument({
-    data: arrayBuffer,
-  }).promise;
+    const arrayBuffer = await file.arrayBuffer();
 
-  let text = "";
+    const pdf = await pdfjsLib.getDocument({
+      data: arrayBuffer,
+    }).promise;
 
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
+    let text = "";
 
-    const pageText = content.items
-      .map((item: any) => item.str)
-      .join(" ");
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      const page = await pdf.getPage(pageNumber);
+      const content = await page.getTextContent();
 
-    text += pageText + "\n";
-  }
+      const pageText = Array.from(content.items)
+        .map((item: any) => item.str || "")
+        .join(" ");
 
-  return text;
-};
+      text += pageText + "\n";
+    }
+
+    return text;
+  };
 
   const extractResumeText = async (file: File) => {
-    if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
+    const isPdf =
+      file.type === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf");
+
+    if (isPdf) {
       return await extractPdfText(file);
     }
 
@@ -60,31 +63,24 @@ const extractPdfText = async (file: File) => {
   };
 
   const generatePortfolio = async () => {
-    if (!file) return;
+    if (!file) {
+      alert("Please upload a resume first.");
+      return;
+    }
 
     try {
       setIsGenerating(true);
       setLoadingText("Reading Resume...");
 
-      setTimeout(() => {
-        setLoadingText("Analyzing Experience...");
-      }, 1200);
-
-      setTimeout(() => {
-        setLoadingText("Identifying Skills...");
-      }, 2400);
-
-      setTimeout(() => {
-        setLoadingText("Building Portfolio...");
-      }, 3600);
-
-      setTimeout(() => {
-        setLoadingText("Almost Ready...");
-      }, 4800);
+      setTimeout(() => setLoadingText("Analyzing Experience..."), 1200);
+      setTimeout(() => setLoadingText("Identifying Skills..."), 2400);
+      setTimeout(() => setLoadingText("Building Portfolio..."), 3600);
+      setTimeout(() => setLoadingText("Almost Ready..."), 4800);
 
       const resumeText = await extractResumeText(file);
+      const finalResumeText = resumeText.trim();
 
-      if (!resumeText.trim()) {
+      if (!finalResumeText) {
         alert("Could not read text from this file. Try another resume.");
         return;
       }
@@ -94,13 +90,15 @@ const extractPdfText = async (file: File) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ resumeText }),
+        body: JSON.stringify({ resumeText: finalResumeText }),
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error || "Failed to generate portfolio");
+console.log("Generate status:", response.status);
+console.log("Generate data:", data);
+      if (!response.ok || !data.portfolio) {
+        console.error("Invalid generate response:", data);
+        alert(data.error || "Failed to generate portfolio. Please try again.");
         return;
       }
 
@@ -109,7 +107,11 @@ const extractPdfText = async (file: File) => {
         JSON.stringify(data.portfolio)
       );
 
-      router.push("/preview");
+      window.name = JSON.stringify({
+        folioforgePortfolio: data.portfolio,
+      });
+
+      router.push("/templates");
     } catch (error) {
       console.error(error);
       alert("Something went wrong while generating the portfolio.");
