@@ -123,6 +123,34 @@ export default function PreviewPage() {
   };
 
   return (
+  <main className="relative min-h-screen bg-[#050505]">
+    <div className="fixed right-5 top-5 z-50 flex items-center gap-2 rounded-full border border-white/10 bg-black/55 px-3 py-2 shadow-2xl backdrop-blur-xl">
+      <button
+        type="button"
+        onClick={() => router.push("/templates")}
+        className="rounded-full border border-white/10 px-4 py-2 text-xs font-medium text-white/70 transition hover:bg-white/[0.06] sm:text-sm"
+      >
+        ← Templates
+      </button>
+
+      <button
+        type="button"
+        onClick={downloadJSON}
+        className="rounded-full border border-white/10 px-4 py-2 text-xs font-medium text-white/70 transition hover:bg-white/[0.06] sm:text-sm"
+      >
+        Download
+      </button>
+
+      <button
+        type="button"
+        onClick={publishPortfolio}
+        disabled={publishing}
+        className="rounded-full bg-[#e5c185] px-4 py-2 text-xs font-bold text-black transition hover:scale-[1.03] disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+      >
+        {publishing ? "Publishing..." : "Publish 🚀"}
+      </button>
+    </div>
+
     <AnimatePresence mode="wait">
       <motion.div
         key={selectedTemplate}
@@ -140,5 +168,6 @@ export default function PreviewPage() {
         )}
       </motion.div>
     </AnimatePresence>
-  );
+  </main>
+);
 }
